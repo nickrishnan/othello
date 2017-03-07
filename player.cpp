@@ -12,7 +12,9 @@
 Player::Player(Side side) {
     // Will be set to true in test_minimax.cpp.
     testingMinimax = false;
-    int NikhilWasHere = 69;
+    our_side = side;
+    game_board = new Board();
+    parity = 0;
 
     /*
      * TODO: Do any initialization you need to do here (setting up the board,
@@ -45,5 +47,14 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
      * TODO: Implement how moves your AI should play here. You should first
      * process the opponent's opponents move before calculating your own move
      */
+    int opmove_x = opponentsMove->getX();
+    int opmove_y = opponentsMove->getY();
+    game_board->set(op_side, opmove_x, opmove_y);
+
+    game_board->doMove(opponentsMove, )
+
+    parity = game_board->count(our_side);
+
+
     return nullptr;
 }

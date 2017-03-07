@@ -67,6 +67,22 @@ bool Board::hasMoves(Side side) {
     return false;
 }
 
+int Board::num_poss_moves()
+{
+    int count = 0;
+    for(int i = 0; i < 8; i++)
+    {
+        for(int j = 0; j < 8; j++)
+        {
+            Move move(i,j);
+            if(checkMove(&move, side))
+            {
+                count++;
+            }
+        }
+    }
+    return count;
+}
 /*
  * Returns true if a move is legal for the given side; false otherwise.
  */
