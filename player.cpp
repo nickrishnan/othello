@@ -67,6 +67,10 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
 
     game_board->doMove(opponentsMove, op_side);
     next_moves = game_board->listAvailMoves(our_side);
+    if(next_moves.size() == 0)
+    {
+        return nullptr;
+    }
     std::vector<Move>::iterator i;
     std::vector<Move>::iterator j;
 
