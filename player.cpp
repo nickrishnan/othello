@@ -14,7 +14,7 @@ Player::Player(Side side) {
     testingMinimax = false;
     our_side = side;
     game_board = new Board();
-    parity = 0;
+    fprintf(stderr, "Side is: %d\n", our_side);
 
     /*
      * TODO: Do any initialization you need to do here (setting up the board,
@@ -50,9 +50,11 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
     Side op_side;
     Move move_done(0,0);
     std::vector<Move> next_moves;
+    std::vector<Move> next_next_moves;
     Board * board_layer1;
     Board * board_layer2;
-    int parity;
+    Move optimal_move(0,0);
+    int min_gain = 100, max = -100, temp; // 100 is an arbitrary number bigger than 64
 
     if(our_side == WHITE)
     {
@@ -65,33 +67,33 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
 
     game_board->doMove(opponentsMove, op_side);
     next_moves = game_board->listAvailMoves(our_side);
-    std::vector<Move> iterator i;
+    std::vector<Move>::iterator i;
+    std::vector<Move>::iterator j;
 
     for(i = next_moves.begin(); i!= next_moves.end(); i++)
     {
         board_layer1 = game_board->copy();
-        board_layer1->doMove(*i, our_side);
-    }
+        board_layer1->doMove(&*i, our_side);
+        board_layer2 = board_layer1->copy();
 
-    if (game_board->hasMoves(our_side))
-    {
-        for(int i = 0; i <  8; i++)
+        next_next_moves = board_layer2->listAvailMoves(op_side);
+        for(j = next_next_moves.begin(); j != next_next_moves.end(); j++)
         {
-            for(int j = 0; j < 8; j++)
+            board_layer2->doMove(&*j, op_side);
+            temp = board_layer2->count(our_side) - board_layer2->count(op_side);
+            if(temp < min_gain)
             {
-                move_done.setX(i);
-                move_done.setY(j);
-                if(game_board->checkMove(&move_done, our_side))
-                {
-                    Move * tbr = new Move(move_done.getX(),move_done.getY());
-                    game_board->doMove(tbr, our_side);
-                    return tbr;
-                }
+                min_gain = temp;
             }
+            board_layer2 = board_layer1->copy();
+        }
+        if(min_gain > max)
+        {
+            max = min_gain;
+            optimal_move = *i;
         }
     }
-    else
-    {
-        return nullptr;
-    }
+    Move * to_return = new Move(optimal_move.getX(),optimal_move.getY());
+    game_board->doMove(to_return, our_side);
+    return to_return;
 }

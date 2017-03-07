@@ -1,5 +1,6 @@
 #ifndef __COMMON_H__
 #define __COMMON_H__
+#define TINY -100000
 
 #include <vector>
 
