@@ -49,6 +49,11 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
      */
     Side op_side;
     Move move_done(0,0);
+    std::vector<Move> next_moves;
+    Board * board_layer1;
+    Board * board_layer2;
+    int parity;
+
     if(our_side == WHITE)
     {
         op_side = BLACK;
@@ -59,6 +64,14 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
     }
 
     game_board->doMove(opponentsMove, op_side);
+    next_moves = game_board->listAvailMoves(our_side);
+    std::vector<Move> iterator i;
+
+    for(i = next_moves.begin(); i!= next_moves.end(); i++)
+    {
+        board_layer1 = game_board->copy();
+        board_layer1->doMove(*i, our_side);
+    }
 
     if (game_board->hasMoves(our_side))
     {
@@ -68,11 +81,9 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
             {
                 move_done.setX(i);
                 move_done.setY(j);
-                fprintf(stderr, "checking setting of move_Done\n");
                 if(game_board->checkMove(&move_done, our_side))
                 {
                     Move * tbr = new Move(move_done.getX(),move_done.getY());
-                    fprintf(stderr, "object construction error\n");
                     game_board->doMove(tbr, our_side);
                     return tbr;
                 }

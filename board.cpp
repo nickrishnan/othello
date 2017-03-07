@@ -101,7 +101,25 @@ bool Board::checkMove(Move *m, Side side) {
     }
     return false;
 }
-
+/*
+ * Returns the list of potential moves for the given side and board state
+ */
+std::vector<Move> Board::listAvailMoves(Side side)
+{
+    std::vector<Move> moves;
+    for (int i = 0; i < 8; i++)
+    {
+        for (int j = 0; j < 8; j++)
+        {
+            Move move(i, j);
+            if (checkMove(&move, side))
+            {
+                moves.push_back(move);
+            }
+        }
+    }
+    return moves;
+}
 /*
  * Modifies the board to reflect the specified move.
  */

@@ -18,7 +18,6 @@ public:
     bool testingMinimax;
     Board * game_board;
     Side our_side;
-    int parity;
 };
 
 #endif
