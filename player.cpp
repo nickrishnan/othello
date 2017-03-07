@@ -47,14 +47,40 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
      * TODO: Implement how moves your AI should play here. You should first
      * process the opponent's opponents move before calculating your own move
      */
-    int opmove_x = opponentsMove->getX();
-    int opmove_y = opponentsMove->getY();
-    game_board->set(op_side, opmove_x, opmove_y);
+    Side op_side;
+    Move move_done(0,0);
+    if(our_side == WHITE)
+    {
+        op_side = BLACK;
+    }
+    else
+    {
+        op_side = WHITE;
+    }
 
-    game_board->doMove(opponentsMove, )
+    game_board->doMove(opponentsMove, op_side);
 
-    parity = game_board->count(our_side);
-
-
-    return nullptr;
+    if (game_board->hasMoves(our_side))
+    {
+        for(int i = 0; i <  8; i++)
+        {
+            for(int j = 0; j < 8; j++)
+            {
+                move_done.setX(i);
+                move_done.setY(j);
+                fprintf(stderr, "checking setting of move_Done\n");
+                if(game_board->checkMove(&move_done, our_side))
+                {
+                    Move * tbr = new Move(move_done.getX(),move_done.getY());
+                    fprintf(stderr, "object construction error\n");
+                    game_board->doMove(tbr, our_side);
+                    return tbr;
+                }
+            }
+        }
+    }
+    else
+    {
+        return nullptr;
+    }
 }
