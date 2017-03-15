@@ -73,6 +73,7 @@ bool Board::hasMoves(Side side) {
  */
 bool Board::checkMove(Move *m, Side side) {
     // Passing is only legal if you have no moves.
+    this->isTurnBlack = !(this->isTurnBlack);
     if (m == nullptr) return !hasMoves(side);
 
     int X = m->getX();

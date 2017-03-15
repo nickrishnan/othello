@@ -16,12 +16,14 @@ private:
     void set(Side side, int x, int y);
     bool onBoard(int x, int y);
 
+
 public:
     Board();
     ~Board();
     Board *copy();
 
     bool isDone();
+    bool isTurnBlack = true; //black goes first in othello
     bool hasMoves(Side side);
     bool checkMove(Move *m, Side side);
     std::vector<Move> listAvailMoves(Side side);

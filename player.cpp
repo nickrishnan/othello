@@ -30,13 +30,6 @@ Player::Player(Side side) {
 Player::~Player() {
 }
 
-int Player::evalScore(Move * tbm, Board * curr_board)
-{
-    int my_tiles = 0;
-    int opp_tiles = 0;
-    int our_front_tiles = 0;
-    int opp_front_tiles
-}
 
 /*
  * Compute the next move given the opponent's last move. Your AI is
@@ -62,14 +55,12 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
     int num_poss_moves = 0;
     bool playerIsBlack = false;
     int presentMoveScore = -1000;
-    int bestMoveScore = -1000
-    Side op_side;
-    Move player_move(0,0);
-    Move optimal_move(0,0);
+    int bestMoveScore = -1100;
+    Move * player_move = new Move(0,0);
+    Move * optimal_move = new Move(0,0);
     std::vector<Move> next_moves;
     std::vector<Move> next_next_moves;
     Board * board_layer1;
-    Board * board_layer2;
     int min_gain = 100, max = -100, temp; // 100 is an arbitrary number bigger than 64
 
     if(our_side == WHITE)
@@ -100,46 +91,121 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
 
 
     std::vector<Move>::iterator i;
-    std::vector<Move>::iterator j;
     for(i = next_moves.begin(); i != next_moves.end(); i++)
     {
-        if(game_board->checkMove(&*i, our_side))
+        player_move = &*i;
+        std::cerr << "Move's X: " << player_move->getX() << "Move's Y: " << player_move->getY() << std::endl;
+        board_layer1 = game_board->copy();
+        board_layer1->doMove(player_move, our_side);
+        int pm_x = player_move->getX();
+        int pm_y = player_move->getY();
+
+        // optimizing for corner priority
+
+
+        presentMoveScore = this->search(board_layer1, depth - 1, alpha, beta, playerIsBlack);
+        if((pm_x == 0 && pm_y == 0) || (pm_x == 0 && pm_y == 7) ||
+            (pm_x == 7 && pm_y == 0) || (pm_x == 7 && pm_y == 7))
         {
-            board_layer1 = game_board->copy();
-            board_layer1->doMove(&*i, our_side);
-            player_move->setX(i);
-            player_move->setY(j);
-            pm_x = player_move->getX();
-            pm_y = player_move->getY();
+            presentMoveScore += 10000;
+        }
 
-            // optimizing for corner priority
-            if((pm_x == 0 && pm_y == 0) || (pm_x == 0 && pm_y == 7) ||
-                (pm_x == 7 && pm_y == 0) || (pm_x == 7 && pm_y == 7))
-            {
-                return player_move;
-            }
+        if((pm_x == 1 && pm_y == 0) || (pm_x == 0 && pm_y == 1) ||
+           (pm_x == 0 && pm_y == 6) || (pm_x == 6 && pm_y == 0) ||
+           (pm_x == 1 && pm_y == 7) || (pm_x == 7 && pm_y == 1) ||
+           (pm_x == 6 && pm_y == 7) || (pm_x == 7 && pm_y == 6))
+        {
+            presentMoveScore -= 10000;
+        }
 
-            presentMoveScore = this->search(*board_layer1, depth - 1, alpha, beta, playerIsBlack);
-
-            if((pm_x == 1 && pm_y == 0) || (pm_x == 0 && pm_y == 1) ||
-               (pm_x == 0 && pm_y == 6) || (pm_x == 6 && pm_y == 0) ||
-               (pm_x == 1 && pm_y == 7) || (pm_x == 7 && pm_y == 1) ||
-               (pm_x == 6 && pm_y == 7) || (pm_x == 7 && pm_y == 6))
-            {
-                presentMoveScore -= 64;
-            }
-
-            if(presentMoveScore > bestMoveScore)
-            {
-                bestMoveScore = presentMoveScore;
-                optimal_move->setX(i);
-                optimal_move->setY(j);
-            }
+        if(presentMoveScore > bestMoveScore)
+        {
+            bestMoveScore = presentMoveScore;
+            optimal_move->setX(pm_x);
+            optimal_move->setY(pm_y);
         }
     }
-    Move * to_return = new Move(optimal_move.getX(),optimal_move.getY());
+    Move * to_return = new Move(optimal_move->getX(),optimal_move->getY());
     game_board->doMove(to_return, our_side);
     return to_return;
+}
+
+int Player::search(Board * board_state, int depth, int alpha, int beta, bool playerIsBlack)
+{
+    Move * to_pass = new Move(0,0);
+    if(depth == 0 || board_state->isDone())
+    {
+        return evalScore(board_state, our_side);
+    }
+    else
+    {
+        if((playerIsBlack == true && board_state->isTurnBlack == true) ||
+            (playerIsBlack == false && board_state->isTurnBlack == false))
+        {
+            for(int x = 0; x < 8; x++)
+            {
+                for(int y = 0; y < 8; y++)
+                {
+                    to_pass->setX(x);
+                    to_pass->setY(y);
+                    if(board_state->checkMove(to_pass, this->our_side))
+                    {
+                        Board * next_state = board_state->copy();
+                        next_state->doMove(to_pass, this->our_side);
+                        int tempMax = search(next_state, depth -1, alpha, beta, playerIsBlack);
+                        if(tempMax > alpha)
+                        {
+                            alpha = tempMax;
+                        }
+                        if(alpha >= beta)
+                        {
+                            return alpha;
+                        }
+                    }
+                }
+            }
+            return alpha;
+        }
+        else
+        {
+            for(int x = 0; x < 8; x++)
+            {
+                for(int y = 0; y < 8; y++)
+                {
+                    to_pass->setX(x);
+                    to_pass->setY(y);
+                    if(board_state->checkMove(to_pass, this->op_side))
+                    {
+                        Board * opponent_state = board_state->copy();
+                        opponent_state->doMove(to_pass, this->op_side);
+                        int tempMin = search(opponent_state, depth - 1, alpha, beta, playerIsBlack);
+                        if(tempMin < beta)
+                        {
+                            beta = tempMin;
+                        }
+                        if(alpha >= beta)
+                        {
+                            return beta;
+                        }
+                    }
+                }
+            }
+            return beta;
+        }
+    }
+}
+
+int Player::evalScore(Board * curr_board, Side playerSide)
+{
+    int score = 0;
+    if(playerSide == BLACK)
+    {
+        return curr_board->countBlack() - curr_board->countWhite();
+    }
+    else
+    {
+        return curr_board->countWhite() - curr_board->countBlack();
+    }
 }
 
     // for(i = next_moves.begin(); i!= next_moves.end(); i++)
@@ -168,4 +234,3 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
     // Move * to_return = new Move(optimal_move.getX(),optimal_move.getY());
     // game_board->doMove(to_return, our_side);
     // return to_return;
-}

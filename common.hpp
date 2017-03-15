@@ -3,6 +3,7 @@
 #define TINY -100000
 
 #include <vector>
+#include <iostream>
 
 enum Side {
     WHITE, BLACK
