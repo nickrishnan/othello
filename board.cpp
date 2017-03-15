@@ -121,6 +121,22 @@ std::vector<Move> Board::listAvailMoves(Side side)
     }
     return moves;
 }
+int Board::numPossMoves(Side side)
+{
+    int num = 0;;
+    for (int i = 0; i < 8; i++)
+    {
+        for (int j = 0; j < 8; j++)
+        {
+            Move move(i, j);
+            if (checkMove(&move, side))
+            {
+                num++;
+            }
+        }
+    }
+    return num;
+}
 /*
  * Modifies the board to reflect the specified move.
  */

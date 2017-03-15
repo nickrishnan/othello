@@ -55,7 +55,7 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
     int num_poss_moves = 0;
     bool playerIsBlack = false;
     int presentMoveScore = -1000;
-    int bestMoveScore = -1100;
+    int bestMoveScore = -11000;
     Move * player_move = new Move(0,0);
     Move * optimal_move = new Move(0,0);
     std::vector<Move> next_moves;
@@ -130,7 +130,7 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
     return to_return;
 }
 
-int Player::search(Board * board_state, int depth, int alpha, int beta, bool playerIsBlack)
+double Player::search(Board * board_state, int depth, int alpha, int beta, bool playerIsBlack)
 {
     Move * to_pass = new Move(0,0);
     if(depth == 0 || board_state->isDone())
@@ -195,42 +195,156 @@ int Player::search(Board * board_state, int depth, int alpha, int beta, bool pla
     }
 }
 
-int Player::evalScore(Board * curr_board, Side playerSide)
+double Player::evalScore(Board * curr_board, Side playerSide) // i used a heuristic from a paper
 {
-    int score = 0;
-    if(playerSide == BLACK)
+    int my_squares = 0;
+    int opp_squares = 0;
+    int i, j, k;
+    int my_front_squares = 0;
+    int opp_front_squares = 0;
+    int x, y;
+    double p = 0., l = 0., c = 0., m = 0., f = 0., d = 0.;
+    Move * tbc = new Move(0,0);
+
+    int X1[8] = {-1, -1, 0, 1, 1, 1, 0, -1};
+    int Y1[8]= {0, 1, 1, 1, 0, -1, -1, -1};
+    int scores[8][8] = {{25, -3, 10, 9, 9, 10, -3, 25}, {-3, -7, -4, 1, 1, -4, -7, -3},
+                        {12, -4, 2, 2, 2, 2, -4, 12}, {9, 1, 2, -3, -3, 2, 1, 8},
+                    {9, 1, 2, -3, -3, 2, 1, 8}, {12, -4, 2, 2, 2, 2, -4, 12},
+                {-3, -7, -4, 1, 1, -4, -7, -3}, {25, -3, 10, 9, 9, 10, -3, 25}};
+
+    if(our_side == BLACK)
     {
-        return curr_board->countBlack() - curr_board->countWhite();
+        my_squares = curr_board->countBlack();
+        opp_squares = curr_board->countWhite();
     }
     else
     {
-        return curr_board->countWhite() - curr_board->countBlack();
+        my_squares = curr_board->countWhite();
+        opp_squares = curr_board->countBlack();
     }
-}
 
-    // for(i = next_moves.begin(); i!= next_moves.end(); i++)
+    for(i = 0; i < 8; i++)
+    {
+        for(j = 0; j < 8; j++)
+        {
+            tbc->setX(i);
+            tbc->setY(j);
+            if(curr_board->get(our_side, i, j))
+            {
+                d += scores[i][j];
+            }
+            else if(curr_board->get(op_side, i, j))
+            {
+                d -= scores[i][j];
+            }
+            else
+            {
+                for(k = 0; k < 8; k++)
+                {
+                    x = X1[k] + i;
+                    y = Y1[k] + j;
+                    if(x >= 0 && x < 8 && y >= 0 && y < 8)
+                    {
+                        if(curr_board->get(our_side, i, j))
+                        {
+                            my_front_squares++;
+                        }
+                        else
+                        {
+                            opp_front_squares++;
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    if(my_squares > opp_squares)
+    {
+        p = (100. * my_squares) / (my_squares + opp_squares);
+    }
+    else if(opp_squares > my_squares)
+    {
+        p = -(100. * opp_squares) / (my_squares + opp_squares);
+    }
+    else
+    {
+        p = 0.;
+    }
+    if(my_front_squares > opp_front_squares)
+    {
+        f = (100. * my_front_squares) / (my_front_squares + opp_front_squares);
+    }
+    else if(opp_squares > my_squares)
+    {
+        f = -(100. * opp_front_squares) / (my_squares + opp_squares);
+    }
+    else
+    {
+        f = 0.;
+    }
+
+//corner scoring
+    my_squares = opp_squares = 0;
+    if(curr_board->get(our_side, 0, 0))
+    {
+        my_squares++;
+    }
+    else if(curr_board->get(op_side, 0, 0))
+    {
+        opp_squares++;
+    }
+    if(curr_board->get(our_side, 0, 7))
+    {
+        my_squares++;
+    }
+    else if(curr_board->get(op_side, 0, 7))
+    {
+        opp_squares++;
+    }
+    if(curr_board->get(our_side, 7, 0))
+    {
+        my_squares++;
+    }
+    else if(curr_board->get(op_side, 7, 0))
+    {
+        opp_squares++;
+    }
+    if(curr_board->get(our_side, 7, 7))
+    {
+        my_squares++;
+    }
+    else if(curr_board->get(op_side, 7, 7))
+    {
+        opp_squares++;
+    }
+    c = 25. * (my_squares - opp_squares);
+
+    my_squares = curr_board->numPossMoves(our_side);
+    opp_squares = curr_board->numPossMoves(op_side);
+
+    if(my_squares > opp_squares)
+    {
+        m = (100. * my_squares) / (my_squares + opp_squares);
+    }
+    else if(opp_squares > my_squares)
+    {
+        m = -(100. * opp_squares) / (my_squares + opp_squares);
+    }
+    else
+    {
+        m = 0;
+    }
+
+    double score = (10 * p) + (900 * c) + (80 * m) + (75 * f) + 10 * d;
+    return score;
+      // if(playerSide == BLACK)
     // {
-    //     board_layer1 = game_board->copy();
-    //     board_layer1->doMove(&*i, our_side);
-    //     board_layer2 = board_layer1->copy();
-    //
-    //     next_next_moves = board_layer2->listAvailMoves(op_side);
-    //     for(j = next_next_moves.begin(); j != next_next_moves.end(); j++)
-    //     {
-    //         board_layer2->doMove(&*j, op_side);
-    //         temp = board_layer2->count(our_side) - board_layer2->count(op_side);
-    //         if(temp < min_gain)
-    //         {
-    //             min_gain = temp;
-    //         }
-    //         board_layer2 = board_layer1->copy();
-    //     }
-    //     if(min_gain > max)
-    //     {
-    //         max = min_gain;
-    //         optimal_move = *i;
-    //     }
+    //     return curr_board->countBlack() - curr_board->countWhite();
     // }
-    // Move * to_return = new Move(optimal_move.getX(),optimal_move.getY());
-    // game_board->doMove(to_return, our_side);
-    // return to_return;
+    // else
+    // {
+    //     return curr_board->countWhite() - curr_board->countBlack();
+    // }
+}

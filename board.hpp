@@ -12,7 +12,6 @@ private:
     bitset<64> taken;
 
     bool occupied(int x, int y);
-    bool get(Side side, int x, int y);
     void set(Side side, int x, int y);
     bool onBoard(int x, int y);
 
@@ -25,6 +24,8 @@ public:
     bool isDone();
     bool isTurnBlack = true; //black goes first in othello
     bool hasMoves(Side side);
+    int numPossMoves(Side side);
+    bool get(Side side, int x, int y);
     bool checkMove(Move *m, Side side);
     std::vector<Move> listAvailMoves(Side side);
     void doMove(Move *m, Side side);
